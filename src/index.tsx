@@ -7,8 +7,11 @@ import { runCli } from "./cli/index.js"
 import { App } from "./components/app.js"
 import { MESSAGES } from "./constants/index.js"
 import type { AppMode } from "./types/index.js"
+import type { UpdateInfo } from "./utils/update-checker.js"
+import { checkForUpdate } from "./utils/update-checker.js"
 
 const VERSION = packageJson.version
+const PACKAGE_NAME = packageJson.name
 
 function parseArguments(): {
   mode: AppMode
@@ -128,8 +131,16 @@ For more information, visit: https://github.com/raghavpillai/git-worktree-manage
 `)
 }
 
+function printUpdateNotification(update: UpdateInfo): void {
+  console.log(
+    `\nUpdate available: ${update.current} → ${update.latest} — run "npm i -g ${PACKAGE_NAME}" to update`
+  )
+}
+
 async function main(): Promise<void> {
   const { mode, help, cliArgs } = parseArguments()
+
+  const updateCheckPromise = checkForUpdate(VERSION, PACKAGE_NAME)
 
   if (help) {
     showHelp()
@@ -140,6 +151,8 @@ async function main(): Promise<void> {
   if (cliArgs) {
     try {
       await runCli(cliArgs)
+      const update = await updateCheckPromise
+      if (update) printUpdateNotification(update)
       process.exit(0)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -151,14 +164,13 @@ async function main(): Promise<void> {
   // Interactive TUI mode
   let hasExited = false
 
-  const { unmount } = render(
+  const { unmount, waitUntilExit } = render(
     <App
       initialMode={mode}
       onExit={() => {
         if (!hasExited) {
           hasExited = true
           unmount()
-          process.exit(0)
         }
       }}
     />
@@ -168,7 +180,6 @@ async function main(): Promise<void> {
     if (!hasExited) {
       hasExited = true
       unmount()
-      process.exit(0)
     }
   })
 
@@ -176,9 +187,13 @@ async function main(): Promise<void> {
     if (!hasExited) {
       hasExited = true
       unmount()
-      process.exit(0)
     }
   })
+
+  await waitUntilExit()
+  const update = await updateCheckPromise
+  if (update) printUpdateNotification(update)
+  process.exit(0)
 }
 
 main()
