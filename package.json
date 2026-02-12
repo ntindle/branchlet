@@ -1,5 +1,5 @@
 {
-  "name": "branchlet",
+  "name": "@ntindle/branchlet",
   "version": "0.1.6",
   "description": "CLI for creating and managing Git worktrees",
   "type": "module",
@@ -19,7 +19,10 @@
     "check": "biome check --write src/",
     "typecheck": "tsc --noEmit",
     "ci": "bun run typecheck && bun run lint && bun test && bun run build",
-    "prepack": "bun run build"
+    "prepack": "bun run build",
+    "release": "bun run ci && npm version patch && npm publish --access public",
+    "release:minor": "bun run ci && npm version minor && npm publish --access public",
+    "release:major": "bun run ci && npm version major && npm publish --access public"
   },
   "keywords": [
     "git",

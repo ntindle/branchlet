@@ -1,15 +1,18 @@
 # 🌳 Branchlet
 
-[![npm version](https://badge.fury.io/js/branchlet.svg)](https://www.npmjs.com/package/branchlet)
-[![license](https://img.shields.io/npm/l/branchlet.svg)](https://www.npmjs.com/package/branchlet)
+[![npm version](https://badge.fury.io/js/%40ntindle%2Fbranchlet.svg)](https://www.npmjs.com/package/@ntindle/branchlet)
+[![license](https://img.shields.io/npm/l/%40ntindle%2Fbranchlet.svg)](https://www.npmjs.com/package/@ntindle/branchlet)
 
-A interactive CLI tool for creating and managing Git worktrees with an easy to use interface.
+An interactive CLI tool for creating and managing Git worktrees with an easy to use interface.
 
 ![Branchlet Demo](assets/branchlet-demo.gif)
 
 ## Features
 
-- **Quick Commands**: Jump directly to specific actions via command line
+- **Interactive TUI**: Full terminal UI with searchable/filterable branch picker
+- **Non-Interactive CLI**: Script worktree operations with `--name`, `--source`, `--branch` flags
+- **Remote Branch Support**: Browse and create worktrees from remote-only branches
+- **Custom Refs**: Use any SHA, tag, or ref as a source for new worktrees
 - **Smart Configuration**: Project-specific and global configuration support
 - **File Management**: Automatically copy configuration files to new worktrees
 - **Post-Create Actions**: Run custom commands after worktree creation
@@ -17,7 +20,7 @@ A interactive CLI tool for creating and managing Git worktrees with an easy to u
 ## Installation
 
 ```bash
-npm install -g branchlet
+npm install -g @ntindle/branchlet
 ```
 
 ## Quick Start
@@ -50,6 +53,25 @@ branchlet delete    # Go directly to worktree deletion
 branchlet settings  # Open settings menu
 ```
 
+### Non-Interactive CLI
+```bash
+# Create a worktree (outputs the path on success)
+branchlet create --name my-feature --source main --branch feat/my-feature
+
+# Create from a remote branch
+branchlet create -n hotfix -s origin/release/2.0 -b fix/bug-123
+
+# List worktrees as JSON
+branchlet list --json
+
+# Delete a worktree by name
+branchlet delete --name my-feature
+branchlet delete --name my-feature --force
+
+# Delete by path
+branchlet delete --path /absolute/path/to/worktree
+```
+
 ### Options
 ```bash
 branchlet --help     # Show help information
@@ -74,7 +96,8 @@ Create a `.branchlet.json` file in your project root or configure global setting
   "worktreePathTemplate": "$BASE_PATH.worktree",
   "postCreateCmd": ["npm install", "npm run db:generate"],
   "terminalCommand": "code .",
-  "deleteBranchWithWorktree": true
+  "deleteBranchWithWorktree": true,
+  "showRemoteBranches": true
 }
 ```
 
@@ -105,6 +128,10 @@ Create a `.branchlet.json` file in your project root or configure global setting
   - Default: `false`
   - When enabled, deleting a worktree will also delete its branch (with safety checks)
   - Shows warnings for branches with unpushed commits or uncommitted changes
+
+- **`showRemoteBranches`**: Show remote-only branches in the source branch picker
+  - Default: `true`
+  - Remote branches that already have a local counterpart are deduplicated
 
 ### Template Variables
 
