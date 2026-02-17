@@ -43,6 +43,7 @@ export interface WorktreeCreateOptions {
   sourceBranch: string
   newBranch: string
   basePath: string
+  isRemoteSource?: boolean
 }
 
 export interface WorktreeDeleteOptions {

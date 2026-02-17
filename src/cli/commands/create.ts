@@ -20,22 +20,28 @@ export async function runCreate(args: CliArgs, worktreeService: WorktreeService)
     throw new Error(`Invalid directory name: ${dirError}`)
   }
 
-  const newBranch = args.branch ?? args.source
-  if (args.branch) {
-    const branchError = validateBranchName(args.branch)
-    if (branchError) {
-      throw new Error(`Invalid branch name: ${branchError}`)
-    }
-  }
-
   const config = worktreeService.getConfigService().getConfig()
   const gitService = worktreeService.getGitService()
   const repoInfo = await gitService.getRepositoryInfo()
 
   const allBranches = await gitService.listBranches(config.showRemoteBranches)
-  const branchExists = allBranches.some((b) => b.name === args.source)
-  if (!branchExists) {
+  const sourceBranchInfo = allBranches.find((b) => b.name === args.source)
+  if (!sourceBranchInfo) {
     throw new Error(`Source branch '${args.source}' does not exist`)
+  }
+
+  // When --branch is omitted and source is remote (e.g. "origin/feat/foo"),
+  // default to the local name ("feat/foo") so git creates a tracking branch.
+  let defaultBranch = args.source
+  if (!args.branch && sourceBranchInfo.isRemote) {
+    defaultBranch = args.source.replace(/^[^/]+\//, "")
+  }
+  const newBranch = args.branch ?? defaultBranch
+  if (args.branch) {
+    const branchError = validateBranchName(args.branch)
+    if (branchError) {
+      throw new Error(`Invalid branch name: ${branchError}`)
+    }
   }
 
   const worktreePath = getWorktreePath(
@@ -52,6 +58,7 @@ export async function runCreate(args: CliArgs, worktreeService: WorktreeService)
     sourceBranch: args.source,
     newBranch,
     basePath,
+    isRemoteSource: sourceBranchInfo.isRemote,
   })
 
   console.log(worktreePath)

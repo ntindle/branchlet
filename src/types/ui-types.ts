@@ -14,6 +14,7 @@ export interface InputPromptProps {
   placeholder?: string
   defaultValue?: string
   validate?: (value: string) => string | undefined
+  transform?: (value: string) => string
   onSubmit: (value: string) => void
   onCancel?: () => void
 }
@@ -55,6 +56,7 @@ export interface CreateWorktreeState {
     | "success"
   directoryName: string
   sourceBranch: string
+  isRemoteSource: boolean
   newBranch: string
   error?: string
   currentCommand?: string

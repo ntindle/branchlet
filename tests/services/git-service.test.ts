@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test"
+import { afterAll, describe, expect, test } from "bun:test"
 import { GitService } from "../../src/services/git-service.js"
+import { executeGitCommand } from "../../src/utils/git-commands.js"
 
 describe("GitService", () => {
   const gitService = new GitService()
@@ -233,6 +234,123 @@ describe("GitService", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
       }
+    })
+
+    describe("remote branch worktree creation", () => {
+      const createdWorktrees: string[] = []
+      const createdBranches: string[] = []
+
+      afterAll(async () => {
+        for (const wt of createdWorktrees) {
+          try {
+            await executeGitCommand(["worktree", "remove", "--force", wt])
+          } catch {
+            // Best effort cleanup
+          }
+        }
+        for (const branch of createdBranches) {
+          try {
+            await executeGitCommand(["branch", "-D", branch])
+          } catch {
+            // Best effort cleanup
+          }
+        }
+      })
+
+      test("should create tracking branch from remote source with new branch name", async () => {
+        const remoteBranches = await gitService.listRemoteBranches()
+        const remoteSource = remoteBranches.find((b) => !b.name.endsWith("/HEAD"))
+        if (!remoteSource) {
+          // Skip if no remote branches available
+          return
+        }
+
+        const newBranch = `test/remote-track-${Date.now()}`
+        const wtName = `test-remote-track-${Date.now()}`
+        const basePath = "/tmp"
+
+        await gitService.createWorktree({
+          name: wtName,
+          sourceBranch: remoteSource.name,
+          newBranch,
+          basePath,
+          isRemoteSource: true,
+        })
+
+        const wtPath = `${basePath}/${wtName}`
+        createdWorktrees.push(wtPath)
+        createdBranches.push(newBranch)
+
+        // Verify not detached — should be on the new branch
+        const branchResult = await executeGitCommand(["rev-parse", "--abbrev-ref", "HEAD"], wtPath)
+        expect(branchResult.success).toBe(true)
+        expect(branchResult.stdout.trim()).toBe(newBranch)
+
+        // Verify tracking is set up
+        const trackingResult = await executeGitCommand(
+          ["config", `branch.${newBranch}.remote`],
+          wtPath
+        )
+        expect(trackingResult.success).toBe(true)
+        expect(trackingResult.stdout.trim()).not.toBe("")
+      })
+
+      test("should create tracking branch from remote source with stripped local name", async () => {
+        const remoteBranches = await gitService.listRemoteBranches()
+        const remoteSource = remoteBranches.find((b) => !b.name.endsWith("/HEAD"))
+        if (!remoteSource) {
+          return
+        }
+
+        // Simulate what the UI/CLI does: strip remote prefix for local branch name
+        const localName = remoteSource.name.replace(/^[^/]+\//, "")
+        // Avoid conflicts if the local branch already exists
+        const safeBranch = `${localName}-test-${Date.now()}`
+        const wtName = `test-remote-local-${Date.now()}`
+        const basePath = "/tmp"
+
+        await gitService.createWorktree({
+          name: wtName,
+          sourceBranch: remoteSource.name,
+          newBranch: safeBranch,
+          basePath,
+          isRemoteSource: true,
+        })
+
+        const wtPath = `${basePath}/${wtName}`
+        createdWorktrees.push(wtPath)
+        createdBranches.push(safeBranch)
+
+        // Verify not detached
+        const branchResult = await executeGitCommand(["rev-parse", "--abbrev-ref", "HEAD"], wtPath)
+        expect(branchResult.success).toBe(true)
+        expect(branchResult.stdout.trim()).toBe(safeBranch)
+      })
+
+      test("should not add --track for local branches with slashes", async () => {
+        // Creating from a local branch (e.g. main) with isRemoteSource=false
+        // should NOT add --track, even though the new branch name has a slash
+        const newBranch = `test/local-slash-${Date.now()}`
+        const wtName = `test-local-slash-${Date.now()}`
+        const basePath = "/tmp"
+
+        await gitService.createWorktree({
+          name: wtName,
+          sourceBranch: "main",
+          newBranch,
+          basePath,
+          isRemoteSource: false,
+        })
+
+        const wtPath = `${basePath}/${wtName}`
+        createdWorktrees.push(wtPath)
+        createdBranches.push(newBranch)
+
+        // Should be on the new branch, not detached
+        const branchResult = await executeGitCommand(["rev-parse", "--abbrev-ref", "HEAD"], wtPath)
+        expect(branchResult.success).toBe(true)
+        expect(branchResult.stdout.trim()).toBe(newBranch)
+      })
     })
   })
 

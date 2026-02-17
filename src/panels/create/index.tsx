@@ -14,6 +14,7 @@ import type { CreateWorktreeState, GitBranch, SelectOption } from "../../types/i
 import {
   getRepositoryRoot,
   getWorktreePath,
+  sanitizeDirectoryName,
   validateBranchName,
   validateDirectoryName,
 } from "../../utils/index.js"
@@ -29,6 +30,7 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
     step: "directory",
     directoryName: "",
     sourceBranch: "",
+    isRemoteSource: false,
     newBranch: "",
   })
   const [branches, setBranches] = useState<GitBranch[]>([])
@@ -87,9 +89,11 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
       }))
       return
     }
+    const isRemote = branches.find((b) => b.name === sourceBranch)?.isRemote ?? false
     setState((prev) => ({
       ...prev,
       sourceBranch,
+      isRemoteSource: isRemote,
       newBranch: "",
       step: "new-branch",
     }))
@@ -106,11 +110,19 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
 
   const handleNewBranchSubmit = (newBranch: string): void => {
     const trimmedBranch = newBranch.trim()
-    setState((prev) => ({
-      ...prev,
-      newBranch: trimmedBranch || prev.sourceBranch,
-      step: "confirm",
-    }))
+    setState((prev) => {
+      let defaultBranch = prev.sourceBranch
+      // For remote branches like "origin/feat/add-cd", default to the local
+      // name "feat/add-cd" so git creates a proper tracking branch.
+      if (!trimmedBranch && prev.isRemoteSource) {
+        defaultBranch = prev.sourceBranch.replace(/^[^/]+\//, "")
+      }
+      return {
+        ...prev,
+        newBranch: trimmedBranch || defaultBranch,
+        step: "confirm",
+      }
+    })
   }
 
   const validateNewBranchName = (name: string): string | undefined => {
@@ -150,6 +162,7 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
         sourceBranch: state.sourceBranch,
         newBranch: state.newBranch,
         basePath: parentDir,
+        isRemoteSource: state.isRemoteSource,
       })
 
       if (config.worktreeCopyPatterns.length > 0) {
@@ -255,6 +268,7 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
           label={MESSAGES.CREATE_DIRECTORY_PROMPT}
           placeholder={MESSAGES.CREATE_DIRECTORY_PLACEHOLDER}
           validate={validateDirectoryName}
+          transform={sanitizeDirectoryName}
           onSubmit={handleDirectorySubmit}
           onCancel={onCancel}
         />

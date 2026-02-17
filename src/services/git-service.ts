@@ -240,13 +240,19 @@ export class GitService {
   }
 
   async createWorktree(options: WorktreeCreateOptions): Promise<void> {
-    const { name, sourceBranch, newBranch, basePath } = options
+    const { name, sourceBranch, newBranch, basePath, isRemoteSource } = options
     const worktreePath = `${basePath}/${name}`
 
     const args = ["worktree", "add"]
 
     if (newBranch !== sourceBranch) {
       args.push("-b", newBranch)
+
+      // When creating from a remote ref, --track ensures the new local branch
+      // tracks the remote branch instead of ending up with a detached HEAD.
+      if (isRemoteSource) {
+        args.push("--track")
+      }
     }
 
     args.push(worktreePath, sourceBranch)
