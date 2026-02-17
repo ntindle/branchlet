@@ -43,6 +43,10 @@ export function getWorktreePath(
   return join(worktreeBase, directoryName)
 }
 
+export function sanitizeDirectoryName(name: string): string {
+  return name.replace(/[/\\]/g, "_")
+}
+
 export function validateDirectoryName(name: string): string | undefined {
   if (!name.trim()) {
     return "Directory name cannot be empty"

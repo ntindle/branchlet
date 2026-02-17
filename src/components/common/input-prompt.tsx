@@ -8,6 +8,7 @@ export function InputPrompt({
   placeholder = "",
   defaultValue = "",
   validate,
+  transform,
   onSubmit,
   onCancel,
 }: InputPromptProps) {
@@ -41,7 +42,10 @@ export function InputPrompt({
     }
 
     if (input && !key.ctrl && !key.meta) {
-      setValue((prev) => prev + input)
+      setValue((prev) => {
+        const next = prev + input
+        return transform ? transform(next) : next
+      })
       setError(undefined)
     }
   })

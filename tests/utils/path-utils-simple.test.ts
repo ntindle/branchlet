@@ -5,6 +5,7 @@ import {
   getRepositoryRoot,
   getWorktreePath,
   resolveTemplate,
+  sanitizeDirectoryName,
   validateBranchName,
   validateDirectoryName,
 } from "../../src/utils/path-utils.js"
@@ -141,6 +142,34 @@ describe("path-utils", () => {
 
     test("should reject HEAD as branch name", () => {
       expect(validateBranchName("HEAD")).toBeDefined()
+    })
+  })
+
+  describe("sanitizeDirectoryName", () => {
+    test("should replace forward slashes with underscores", () => {
+      expect(sanitizeDirectoryName("user/branch")).toBe("user_branch")
+    })
+
+    test("should replace backslashes with underscores", () => {
+      expect(sanitizeDirectoryName("user\\branch")).toBe("user_branch")
+    })
+
+    test("should replace multiple slashes", () => {
+      expect(sanitizeDirectoryName("a/b/c/d")).toBe("a_b_c_d")
+    })
+
+    test("should replace mixed separators", () => {
+      expect(sanitizeDirectoryName("a/b\\c")).toBe("a_b_c")
+    })
+
+    test("should leave valid names unchanged", () => {
+      expect(sanitizeDirectoryName("my-feature")).toBe("my-feature")
+    })
+
+    test("should handle real branch names", () => {
+      expect(sanitizeDirectoryName("lluisagusti/secrt-1926-agent-generation")).toBe(
+        "lluisagusti_secrt-1926-agent-generation"
+      )
     })
   })
 
