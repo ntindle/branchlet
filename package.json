@@ -1,6 +1,6 @@
 {
   "name": "@ntindle/branchlet",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "CLI for creating and managing Git worktrees",
   "type": "module",
   "main": "dist/index.js",
