@@ -69,10 +69,17 @@ export class WorktreeService {
         SOURCE_BRANCH: options.sourceBranch,
       }
 
-      await executePostCreateCommands(config.postCreateCmd, variables)
+      const results = await executePostCreateCommands(config.postCreateCmd, variables)
+      const failures = results.filter((r) => !r.success)
+      if (failures.length > 0) {
+        for (const f of failures) {
+          process.stderr.write(`Warning: post-create command failed: ${f.command}\n`)
+          if (f.error) process.stderr.write(`  ${f.error}\n`)
+        }
+      }
     }
 
-    if (config.terminalCommand) {
+    if (config.terminalCommand && process.stdin.isTTY) {
       await openTerminal(config.terminalCommand, worktreePath)
     }
   }

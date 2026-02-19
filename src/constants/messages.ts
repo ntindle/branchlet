@@ -69,6 +69,14 @@ export const MESSAGES = {
   LOADING_GIT_INFO: "Loading git information...",
   LOADING_BRANCHES: "Loading branches...",
   LOADING_WORKTREES: "Loading worktrees...",
+
+  // Non-TTY errors
+  ERROR_NO_TTY: "Interactive mode requires a TTY (terminal). Use non-interactive flags instead.",
+  ERROR_NO_TTY_CREATE: "branchlet create -n <name> -s <source-branch> [-b <new-branch>]",
+  ERROR_NO_TTY_DELETE: "branchlet delete -n <name> [-f] or branchlet delete -p <path> [-f]",
+  ERROR_NO_TTY_LIST: "branchlet list --json",
+  ERROR_NO_TTY_SETTINGS: "Edit config directly: ~/.branchlet/settings.json or .branchlet.json",
+  ERROR_NO_TTY_MENU: "branchlet create|list|delete|settings [options]",
 } as const
 
 export const COLORS = {

@@ -78,7 +78,36 @@ function parseArguments(): {
     }
   }
 
+  // Non-TTY: either auto-promote to CLI mode or error
+  if (!process.stdin.isTTY) {
+    if (mode === "list") {
+      return {
+        mode,
+        help: false,
+        cliArgs: { command: "list", json: true },
+      }
+    }
+
+    printNonTtyError(mode)
+    process.exit(1)
+  }
+
   return { mode, help: false, cliArgs: null }
+}
+
+function printNonTtyError(mode: AppMode): void {
+  process.stderr.write(`Error: ${MESSAGES.ERROR_NO_TTY}\n`)
+
+  const modeMessages: Record<string, string> = {
+    create: MESSAGES.ERROR_NO_TTY_CREATE,
+    delete: MESSAGES.ERROR_NO_TTY_DELETE,
+    list: MESSAGES.ERROR_NO_TTY_LIST,
+    settings: MESSAGES.ERROR_NO_TTY_SETTINGS,
+    menu: MESSAGES.ERROR_NO_TTY_MENU,
+  }
+
+  const hint = modeMessages[mode] ?? MESSAGES.ERROR_NO_TTY_MENU
+  process.stderr.write(`  ${hint}\n`)
 }
 
 function showHelp(): void {
