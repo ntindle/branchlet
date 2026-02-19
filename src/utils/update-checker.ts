@@ -29,20 +29,23 @@ function isNewer(latest: string, current: string): boolean {
 
 export async function checkForUpdate(
   currentVersion: string,
-  packageName: string
+  packageName: string,
+  forceCheck?: boolean
 ): Promise<UpdateInfo | null> {
   try {
     let latestVersion: string | undefined
 
-    try {
-      const cacheContent = await readFile(UPDATE_CHECK_FILE, "utf-8")
-      const cache: CacheData = JSON.parse(cacheContent)
+    if (!forceCheck) {
+      try {
+        const cacheContent = await readFile(UPDATE_CHECK_FILE, "utf-8")
+        const cache: CacheData = JSON.parse(cacheContent)
 
-      if (Date.now() - cache.lastCheck < CHECK_INTERVAL_MS) {
-        latestVersion = cache.latestVersion
+        if (Date.now() - cache.lastCheck < CHECK_INTERVAL_MS) {
+          latestVersion = cache.latestVersion
+        }
+      } catch {
+        // Cache doesn't exist or is invalid
       }
-    } catch {
-      // Cache doesn't exist or is invalid
     }
 
     if (!latestVersion) {

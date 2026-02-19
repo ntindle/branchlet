@@ -16,6 +16,7 @@ const PACKAGE_NAME = packageJson.name
 function parseArguments(): {
   mode: AppMode
   help: boolean
+  version: boolean
   cliArgs: CliArgs | null
 } {
   const argv = minimist(process.argv.slice(2), {
@@ -34,12 +35,11 @@ function parseArguments(): {
   })
 
   if (argv.help) {
-    return { mode: "menu", help: true, cliArgs: null }
+    return { mode: "menu", help: true, version: false, cliArgs: null }
   }
 
   if (argv.version) {
-    console.log(`Branchlet v${VERSION}`)
-    process.exit(0)
+    return { mode: "menu", help: false, version: true, cliArgs: null }
   }
 
   const validModes: AppMode[] = ["menu", "create", "list", "delete", "settings"]
@@ -66,6 +66,7 @@ function parseArguments(): {
     return {
       mode,
       help: false,
+      version: false,
       cliArgs: {
         command: mode as CliArgs["command"],
         name: argv.name || undefined,
@@ -84,6 +85,7 @@ function parseArguments(): {
       return {
         mode,
         help: false,
+        version: false,
         cliArgs: { command: "list", json: true },
       }
     }
@@ -92,7 +94,7 @@ function parseArguments(): {
     process.exit(1)
   }
 
-  return { mode, help: false, cliArgs: null }
+  return { mode, help: false, version: false, cliArgs: null }
 }
 
 function printNonTtyError(mode: AppMode): void {
@@ -167,7 +169,14 @@ function printUpdateNotification(update: UpdateInfo): void {
 }
 
 async function main(): Promise<void> {
-  const { mode, help, cliArgs } = parseArguments()
+  const { mode, help, version, cliArgs } = parseArguments()
+
+  if (version) {
+    console.log(`Branchlet v${VERSION}`)
+    const update = await checkForUpdate(VERSION, PACKAGE_NAME, true)
+    if (update) printUpdateNotification(update)
+    process.exit(0)
+  }
 
   const updateCheckPromise = checkForUpdate(VERSION, PACKAGE_NAME)
 
