@@ -20,9 +20,9 @@
     "typecheck": "tsc --noEmit",
     "ci": "bun run typecheck && bun run lint && bun test && bun run build",
     "prepack": "bun run build",
-    "release": "npm whoami && bun run ci && npm version patch && npm publish --access public && git push && git push --tags",
-    "release:minor": "npm whoami && bun run ci && npm version minor && npm publish --access public && git push && git push --tags",
-    "release:major": "npm whoami && bun run ci && npm version major && npm publish --access public && git push && git push --tags"
+    "release": "npm whoami && bun run ci && npm version patch && npm publish --access public && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
+    "release:minor": "npm whoami && bun run ci && npm version minor && npm publish --access public && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
+    "release:major": "npm whoami && bun run ci && npm version major && npm publish --access public && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes"
   },
   "keywords": [
     "git",
