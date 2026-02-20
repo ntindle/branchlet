@@ -18,7 +18,9 @@
     "format": "biome format --write src/",
     "check": "biome check --write src/",
     "typecheck": "tsc --noEmit",
-    "ci": "bun run typecheck && bun run lint && bun test && bun run build",
+    "generate:schema": "bun run scripts/generate-schema.ts",
+    "check:schema": "bun run scripts/check-schema.ts",
+    "ci": "bun run typecheck && bun run check:schema && bun run lint && bun test && bun run build",
     "prepack": "bun run build",
     "release": "npm whoami && bun run ci && npm version patch && npm publish --access public && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
     "release:minor": "npm whoami && bun run ci && npm version minor && npm publish --access public && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
@@ -41,7 +43,8 @@
   "license": "MIT",
   "files": [
     "dist/",
-    "README.md"
+    "README.md",
+    "schema.json"
   ],
   "dependencies": {
     "glob": "^11.1.0",

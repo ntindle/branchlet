@@ -85,6 +85,17 @@ Branchlet looks for configuration files in this order:
 1. `.branchlet.json` in your repo's root (project-specific)
 2. `~/.branchlet/settings.json` (global configuration)
 
+### Schema Validation
+
+Add `$schema` to your `.branchlet.json` for autocompletion and validation in VSCode:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/ntindle/branchlet/main/schema.json",
+  "postCreateCmd": ["npm install"]
+}
+```
+
 ### Configuration Options
 
 Create a `.branchlet.json` file in your project root or configure global settings:
