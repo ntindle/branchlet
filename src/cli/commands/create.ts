@@ -24,7 +24,16 @@ export async function runCreate(args: CliArgs, worktreeService: WorktreeService)
   const gitService = worktreeService.getGitService()
   const repoInfo = await gitService.getRepositoryInfo()
 
-  const allBranches = await gitService.listBranches(config.showRemoteBranches)
+  // If the source looks like a remote ref (e.g. "origin/branch"), fetch it
+  // to ensure the tracking ref exists locally under refs/remotes/.
+  const isRemoteRef = args.source.includes("/")
+  if (isRemoteRef) {
+    const remoteName = args.source.substring(0, args.source.indexOf("/"))
+    const remoteBranch = args.source.substring(args.source.indexOf("/") + 1)
+    await gitService.fetchBranch(remoteName, remoteBranch)
+  }
+
+  const allBranches = await gitService.listBranches(config.showRemoteBranches || isRemoteRef)
   const sourceBranchInfo = allBranches.find((b) => b.name === args.source)
   if (!sourceBranchInfo) {
     throw new Error(`Source branch '${args.source}' does not exist`)

@@ -287,6 +287,13 @@ export class GitService {
     return statusResult.success && statusResult.stdout.trim() === ""
   }
 
+  async fetchBranch(remoteName: string, branchName: string): Promise<void> {
+    await executeGitCommand(
+      ["fetch", remoteName, `${branchName}:refs/remotes/${remoteName}/${branchName}`],
+      this.gitRoot
+    )
+  }
+
   async branchExists(branchName: string): Promise<boolean> {
     const result = await executeGitCommand(
       ["show-ref", "--verify", `refs/heads/${branchName}`],

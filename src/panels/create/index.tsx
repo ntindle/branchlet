@@ -152,7 +152,9 @@ export function CreateWorktree({ worktreeService, onComplete, onCancel }: Create
       const worktreePath = getWorktreePath(
         gitRoot,
         state.directoryName,
-        config.worktreePathTemplate
+        config.worktreePathTemplate,
+        state.newBranch,
+        state.sourceBranch
       )
       const parentDir = worktreePath.replace(`/${state.directoryName}`, "")
 

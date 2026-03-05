@@ -1,6 +1,7 @@
 import { rmdir } from "node:fs/promises"
 import type { TemplateVariables, WorktreeCreateOptions } from "../types/index.js"
 import { GitWorktreeError, ValidationError } from "../utils/error-handlers.js"
+import { fileExists } from "../utils/file-patterns.js"
 import { executeGitCommand } from "../utils/git-commands.js"
 import { getRepositoryBaseName, getRepositoryRoot, getWorktreePath } from "../utils/path-utils.js"
 import { ConfigService } from "./config-service.js"
@@ -50,6 +51,12 @@ export class WorktreeService {
 
     if (await this.gitService.worktreeExists(worktreePath)) {
       throw new ValidationError(`Worktree already exists at '${worktreePath}'`)
+    }
+
+    if (await fileExists(worktreePath)) {
+      throw new ValidationError(
+        `Path '${worktreePath}' already exists on the filesystem but is not a registered git worktree. Remove it manually or choose a different name.`
+      )
     }
 
     await this.gitService.createWorktree({
