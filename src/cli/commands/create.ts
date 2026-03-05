@@ -66,6 +66,13 @@ export async function runCreate(args: CliArgs, worktreeService: WorktreeService)
     newBranch,
     args.source
   )
+
+  // If the worktree already exists, just print the path and exit successfully.
+  if (await gitService.worktreeExists(worktreePath)) {
+    console.log(worktreePath)
+    return
+  }
+
   const basePath = dirname(worktreePath)
 
   await worktreeService.createWorktree({
